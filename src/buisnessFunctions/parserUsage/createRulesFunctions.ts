@@ -1,9 +1,14 @@
 import { BuisnessLogicBuilder } from "../../utils/buisness/BuisnessLogicBuilder";
 import { Parser } from "hot-formula-parser";
-import { getRule, injectArguments, rules } from "./buisnessRules";
+import {
+  getRule,
+  injectArguments,
+  rules,
+} from "./buisnessRulesForFunctionalityA";
 
 var parser = new Parser();
 
+//how to define types ?
 type Payload = {
   a: number;
   b: number;

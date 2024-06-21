@@ -13,12 +13,6 @@ export interface BuisnessLogicOptions<
    *
    */
   handler: (payload: Payload) => Result;
-
-  /**
-   *  If we need to do some action after the buisness logic is done, we can do it here.
-   *
-   */
-  action?: Action<Result>;
 }
 
 /**
@@ -33,12 +27,6 @@ export class BuisnessLogicBuilder<
   constructor(private options: BuisnessLogicOptions<Payload, Result>) {}
 
   build() {
-    return (payload: Payload): Result => {
-      const result = this.options.handler(payload);
-      if (this.options.action) {
-        this.options.action.exectute(result);
-      }
-      return result;
-    };
+    return this.options.handler;
   }
 }

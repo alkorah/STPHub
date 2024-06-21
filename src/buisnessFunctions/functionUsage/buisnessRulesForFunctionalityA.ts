@@ -1,26 +1,18 @@
-/**
- *  Example usage. CLASS TYPE. This is how I think it should be done
- *
- * A payload type coming from either an api trigger or queue trigger
- *
- * A result type that will be returned from the handler
- */
-
 import { MongoAction } from "../../utils/action/mongo";
 import { BuisnessLogicBuilder } from "../../utils/buisness/BuisnessLogicBuilder";
 import { BuisnessLogicException } from "../../utils/buisness/BuisnessLogicException";
 
-//for response builder
+//for response builder. Define what the buisness rules want as a payload and the types that it responds with
 export type Payload = {
   a: string;
   b: number;
   c: number;
 };
 
-//some buisness rule results
 type BuisnessRuleAResult = {
   d: number;
 };
+
 type BuissnessRuleBResult = {
   e: number;
 };
@@ -28,14 +20,20 @@ type BuissnessRuleBResult = {
 //the result, can place this in response builder generic
 export type Result = BuisnessRuleAResult | BuissnessRuleBResult;
 
-export const exampleBuisnessRule = new BuisnessLogicBuilder<Payload, Result>({
-  //the actual buisnes logic, seperated away from everything else
+export const buisnessRulesForFunctionalityA = new BuisnessLogicBuilder<
+  Payload,
+  Result
+>({
+  //handler contains all buinsess logic.
   handler(payload) {
-    if (payload.a === "some rule that says I need buisness type A result") {
+    //buisness rule 1
+    if (payload.a === "rule A, returns type A result") {
       return {
         d: payload.b + payload.c,
       };
-    } else if (payload.a === "some rule that says I need buisness type B result") {
+    }
+    //buisness rule 2
+    else if (payload.a === "rule B, returns type B result") {
       return {
         e: payload.b - payload.c,
       };
@@ -43,5 +41,4 @@ export const exampleBuisnessRule = new BuisnessLogicBuilder<Payload, Result>({
       throw new BuisnessLogicException("No rule matched");
     }
   },
-  action: new MongoAction(),
 });
