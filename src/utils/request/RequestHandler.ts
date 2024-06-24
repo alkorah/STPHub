@@ -3,27 +3,24 @@ import { QueueClient } from "@azure/storage-queue";
 
 type Zod = {};
 
-/**
- * This can be improved upon, not defined well rn.
- *
- */
-interface RequestBuilderQueueOptions<Payload extends GenericPayload> {
-  queueHandler?: (client: QueueClient) => Promise<void>;
-}
-
-interface RequestBuilderHTTPOptions<Payload extends GenericPayload> {
+interface RequestBuilderHTTPOptions<Payload> {
+  type: "http";
   zodSantizer: Map<keyof Payload, Zod>;
 }
 
-export class RequestBuilder<Payload extends GenericPayload> {
+interface RequestBuilderQueueOptions {
+  type: "queue";
+}
+
+export class RequestBuilder<Data> {
   constructor(
     private options:
-      | RequestBuilderQueueOptions<Payload>
-      | RequestBuilderHTTPOptions<Payload>
+      | RequestBuilderHTTPOptions<Data>
+      | RequestBuilderQueueOptions
   ) {}
 
   // do the stuff to prepare payload, like either read from queue or sanatize http. This is not defined well rn
   build() {
-    return (request: HttpRequest) => undefined as unknown as Payload;
+    return (data: Data) => undefined as unknown as Data;
   }
 }

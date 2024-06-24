@@ -1,27 +1,32 @@
+import { InvocationContext } from "@azure/functions";
 import { Engine } from "json-rules-engine";
 
-type SubScribers<EventPayloads> = Array<
-  (data: EventPayloads) => Promise<void>
->;
+type SubScriber<EventPayloads> = (
+  data: EventPayloads,
+  context: InvocationContext
+) => Promise<void>;
 
 export class RuleEngineEventManager<
   EventPayloads extends GenericPayload,
   EventNames extends string = string
 > {
-  subscribers: Map<EventNames, SubScribers<EventPayloads>> = new Map();
+  subscribers: Map<EventNames, Array<SubScriber<EventPayloads>>> = new Map();
 
   constructor(private ruleEngine: Engine) {}
 
   subscribe(
     eventName: EventNames,
-    subscriber: (result: EventPayloads) => Promise<void>
+    subscriber: (
+      result: EventPayloads,
+      context: InvocationContext
+    ) => Promise<void>
   ) {
     if (!this.subscribers.has(eventName)) {
       this.subscribers.set(eventName, []);
     }
-    const prevSub = this.subscribers.get(
-      eventName
-    ) as SubScribers<EventPayloads>;
+    const prevSub = this.subscribers.get(eventName) as Array<
+      SubScriber<EventPayloads>
+    >;
 
     prevSub.push(subscriber);
 
@@ -29,7 +34,7 @@ export class RuleEngineEventManager<
   }
 
   build() {
-    return async (payload: EventPayloads) => {
+    return async (payload: EventPayloads, context: InvocationContext) => {
       const { events } = await this.ruleEngine.run(payload);
 
       for (const event of events) {
@@ -37,7 +42,7 @@ export class RuleEngineEventManager<
         if (subscribers) {
           await Promise.all(
             subscribers.map((subscriber) =>
-              subscriber(event.params as EventPayloads)
+              subscriber(event.params as EventPayloads, context)
             )
           );
         }

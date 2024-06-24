@@ -27,28 +27,23 @@ const readFromIntakeEngine = new Engine().addRule({
 const readFromIntakeRuleManger = new RuleEngineEventManager(
   readFromIntakeEngine
 )
-  .subscribe("addressChange", async (data) => {
+  .subscribe("addressChange", async (eventData, context) => {
     //send to IFast
-    new MongoAction().exectute(data);
+    new MongoAction().exectute(eventData);
   })
-  .subscribe("addressChange", async (data) => {
+  .subscribe("addressChange", async (eventData, context) => {
     //send to AWD
   });
 
-export const readfromIntakeFunction = createAzureFunction<{}, HttpResponseInit>(
-  new RequestBuilder({}),
-  readFromIntakeRuleManger,
-  new ResponseBuilder<HttpResponseInit>({
-    async handler() {
-      return {
-        status: 200,
-      };
-    },
-  })
+export const readfromIntakeFunction = createAzureFunction<unknown>(
+  new RequestBuilder({
+    type: "queue",
+  }),
+  readFromIntakeRuleManger
 );
 
-app.http("test", {
-  methods: ["GET", "POST"],
-  authLevel: "anonymous",
+app.storageQueue("ReadfromIntake", {
+  queueName: "ins-address-change-intake-queue",
+  connection: "AzureWebJobsStorage",
   handler: readfromIntakeFunction,
 });
