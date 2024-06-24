@@ -13,5 +13,4 @@ export const recordSchema = new mongoose.Schema({
   },
 });
 
-export const Record =
-  mongoose.model("Record") || mongoose.model("Record", recordSchema);
+export const Record = mongoose.model("Record", recordSchema);

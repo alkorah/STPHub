@@ -55,6 +55,7 @@ const readFromIntakeRuleManger = new RuleEngineEventManager(
   readFromIntakeEngine
 )
   .subscribe("addressChangeAccepted", async (payload, eventData, context) => {
+    context.log("EXEC addressChangeAccepted");
     const newReq = new Record({
       state: "Processing",
       type: "AddressChange",
@@ -62,14 +63,11 @@ const readFromIntakeRuleManger = new RuleEngineEventManager(
 
     await newReq.save();
   })
-  .subscribe(
-    "addressChangeExecuting",
-    async (payload, eventData, context) => {
-        
-    }
-  );
+  .subscribe("addressChangeExecuting", async (payload, eventData, context) => {
+    context.log("EXEC addressChangeExecuting");
+  });
 
-export const readfromIntakeFunction = createAzureFunction<unknown>(
+export const ReadfromIntake = createAzureFunction<unknown>(
   new RequestBuilder({
     type: "queue",
   }),
@@ -79,5 +77,5 @@ export const readfromIntakeFunction = createAzureFunction<unknown>(
 app.storageQueue("ReadfromIntake", {
   queueName: "ins-address-change-intake-queue",
   connection: "AzureWebJobsStorage",
-  handler: readfromIntakeFunction,
+  handler: ReadfromIntake,
 });

@@ -35,15 +35,14 @@ export function createAzureFunction<Data, Result = undefined>(
 
   return async function (request, context): Promise<Result> {
     try {
-      const payload = intakeFN(request);
+      const payload = await intakeFN(request);
       await ruleEngineFN(payload, context);
       if (outakeFN) {
         return outakeFN();
       }
       return undefined as Result;
     } catch (e) {
-      //maybe we need an error handler builder as well ?
-      //Or check the settings of the buidlers to determine how to handle
+      context.error(e);
       return undefined as Result;
     }
   };

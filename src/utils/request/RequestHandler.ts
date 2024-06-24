@@ -1,11 +1,13 @@
-import { HttpRequest } from "@azure/functions";
-import { QueueClient } from "@azure/storage-queue";
-
-type Zod = {};
+import {
+  HttpRequest,
+  HttpRequestBodyInit,
+  HttpRequestInit,
+} from "@azure/functions";
+import { z } from "zod";
 
 interface RequestBuilderHTTPOptions<Payload> {
-  type: "http";
-  zodSantizer: Map<keyof Payload, Zod>;
+  type: "post" | "get" | "put" | "delete";
+  zodSantizer: Map<string, z.Schema>;
 }
 
 interface RequestBuilderQueueOptions {
@@ -19,8 +21,33 @@ export class RequestBuilder<Data> {
       | RequestBuilderQueueOptions
   ) {}
 
+  sanatize(record: HttpRequestBodyInit) {
+    Object.entries(record).forEach(([value, key]) => {
+      const schema = (
+        this.options as RequestBuilderHTTPOptions<Data>
+      ).zodSantizer.get(key);
+      if (schema) {
+        schema.parse(record);
+      }
+    });
+  }
+
   // do the stuff to prepare payload, like either read from queue or sanatize http. This is not defined well rn
   build() {
-    return (data: Data) => undefined as unknown as Data;
+    return async (data: Data) => {
+      if (this.options.type === "post") {
+        const payload = JSON.parse(await (data as HttpRequest).text());
+
+        this.sanatize(payload as HttpRequestBodyInit);
+
+        console.log(payload);
+        return payload;
+      }
+      if (this.options.type === "queue") {
+        return JSON.parse(data);
+      } else {
+        return undefined;
+      }
+    };
   }
 }
