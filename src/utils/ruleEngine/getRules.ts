@@ -7,8 +7,6 @@ const getRulesEngine = (folderPath: string) => {
   const ruleEngine = new Engine();
 
   fs.readdirSync(folderPath).forEach((file: string) => {
-    console.log(folderPath + "/" + file);
-
     const rule = JSON.parse(fs.readFileSync(folderPath + "/" + file, "utf8"));
 
     ruleEngine.addRule(rule);
@@ -32,6 +30,7 @@ export const createRulesEngine = (
       try {
         let newRuleEngine = getRulesEngine(folderPath);
         ruleEngine = newRuleEngine;
+        console.log("hot reloaded rules");
       } catch (e) {}
     });
   }
