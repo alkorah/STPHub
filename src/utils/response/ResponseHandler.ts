@@ -2,12 +2,12 @@
  * This can be improved upon, not defined well rn.
  *
  */
-interface ResponseBuilderOptions {
-  handler: () => FunctionResult;
+interface ResponseBuilderOptions<Result> {
+  handler: () => Promise<Result>;
 }
 
-export class ResponseBuilder {
-  constructor(private options: ResponseBuilderOptions) {}
+export class ResponseBuilder<Result> {
+  constructor(private options: ResponseBuilderOptions<Result>) {}
 
   build() {
     return this.options.handler;

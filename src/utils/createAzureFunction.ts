@@ -7,10 +7,10 @@ import { RuleEngineEventManager } from "./ruleEngine/RuleEngineEventManager";
 import { RequestBuilder } from "./request/RequestHandler";
 import { ResponseBuilder } from "./response/ResponseHandler";
 
-type AzureFunction = (
+type AzureFunction<Result> = (
   request: HttpRequest,
   context: InvocationContext
-) => FunctionResult;
+) => Promise<Result>;
 
 /*
  * Configured as a pipeline,
@@ -28,24 +28,29 @@ type AzureFunction = (
  *
  * I think the create function/builder pattern is best suited for the way azure functions has configued it for us/
  */
-export function createAzureFunction<Payload extends GenericPayload>(
+export function createAzureFunction<Payload extends GenericPayload, Result>(
   request: RequestBuilder<Payload>,
   ruleEngineManager: RuleEngineEventManager<any, any>,
-  response: ResponseBuilder
-): AzureFunction {
+  response?: ResponseBuilder<Result>
+): AzureFunction<Result> {
   const intakeFN = request.build();
   const ruleEngineFN = ruleEngineManager.build();
-  const outakeFN = response.build();
 
-  return async function (request, context) {
+  let outakeFN = response ? response.build() : undefined;
+
+  return async function (request, context): Promise<Result> {
     try {
       const payload = intakeFN(request);
       await ruleEngineFN(payload);
-      return outakeFN();
+      if (outakeFN) {
+        return outakeFN();
+      }
+      //if outtake doesnt exist then we dont need to return anything, ts misses this 
+      return undefined as Result;
     } catch (e) {
       //maybe we need an error handler builder as well ?
       //Or check the settings of the buidlers to determine how to handle
-      return {};
+      return undefined as Result;
     }
   };
 }

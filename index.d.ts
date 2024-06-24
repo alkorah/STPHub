@@ -8,6 +8,4 @@ declare global {
   type ParsedData = JSONData | PrimitiveData;
 
   type GenericPayload = Record<string, ParsedData>;
-
-  type FunctionResult = Promise<HttpResponseInit>;
 }
