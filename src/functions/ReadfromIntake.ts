@@ -55,17 +55,17 @@ const readFromIntakeRuleManger = new RuleEngineEventManager(
   readFromIntakeEngine
 )
   .subscribe("addressChangeAccepted", async (payload, eventData, context) => {
-    context.log("EXEC addressChangeAccepted");
     const newReq = new Record({
-      state: "Processing",
-      type: "AddressChange",
+      State: "Processing",
+      RequestType: "AddressChange",
     });
 
     await newReq.save();
   })
-  .subscribe("addressChangeExecuting", async (payload, eventData, context) => {
-    context.log("EXEC addressChangeExecuting");
-  });
+  .subscribe(
+    "addressChangeExecuting",
+    async (payload, eventData, context) => {}
+  );
 
 export const ReadfromIntake = createAzureFunction<unknown>(
   new RequestBuilder({

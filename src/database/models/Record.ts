@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 
 export const recordSchema = new mongoose.Schema({
-  requestType: {
+  RequestType: {
     type: String,
-    enum: ["addressChange", "somethinElse"],
+    enum: ["AddressChange", "somethinElse"],
     required: true,
   },
-  state: {
+  State: {
     type: String,
     enum: ["Processing", "Intake"],
     required: true,

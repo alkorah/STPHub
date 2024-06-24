@@ -52,9 +52,14 @@ export class RuleEngineEventManager<
         const subscribers = this.subscribers.get(event.type as EventNames);
         if (subscribers) {
           return await Promise.all(
-            subscribers.map((subscriber) =>
-              subscriber(payload, event.params as EventPayloads, context)
-            )
+            subscribers.map((subscriber) => {
+              context.log("EXEC: " + event.type);
+              return subscriber(
+                payload,
+                event.params as EventPayloads,
+                context
+              );
+            })
           );
         }
       }

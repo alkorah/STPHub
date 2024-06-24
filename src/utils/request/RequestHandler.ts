@@ -35,16 +35,16 @@ export class RequestBuilder<Data> {
   // do the stuff to prepare payload, like either read from queue or sanatize http. This is not defined well rn
   build() {
     return async (data: Data) => {
+      console.log(data);
       if (this.options.type === "post") {
         const payload = JSON.parse(await (data as HttpRequest).text());
 
         this.sanatize(payload as HttpRequestBodyInit);
 
-        console.log(payload);
         return payload;
       }
       if (this.options.type === "queue") {
-        return JSON.parse(data);
+        return data;
       } else {
         return undefined;
       }
