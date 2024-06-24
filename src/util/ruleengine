@@ -1,0 +1,48 @@
+import { AzureFunction, Context } from "@azure/functions";
+import { Engine } from "json-rules-engine";
+import { QueueServiceClient } from "@azure/storage-queue";
+
+const azureFunction: AzureFunction = async function(context: Context, queueItem: any): Promise<void> {
+    let engine = new Engine();
+
+    // Define a rule for checking RequestType
+    engine.addRule({
+        conditions: {
+            all: [{
+                fact: 'RequestType',
+                operator: 'equal',
+                value: 'AddressChange'
+            }]
+        },
+        event: {
+            type: 'addressChangeDetected',
+            params: {
+                message: 'RequestType is AddressChange'
+            }
+        }
+    });
+
+    // Pass the queueItem to the engine for evaluation
+    engine
+        .run(queueItem)
+        .then(async (events) => {
+            if (events.length > 0 && events[0].type === 'addressChangeDetected') {
+                context.log('Rule triggered:', events[0].params.message);
+                
+                // Update the queueItem status to pending
+                queueItem.status = 'pending';
+
+                // Send a message to the MainframeRequestQueue
+                const connectionString = process.env["AzureWebJobsStorage"];
+                const queueServiceClient = QueueServiceClient.fromConnectionString(connectionString);
+                const queueClient = queueServiceClient.getQueueClient("MainframeRequestQueue");
+                await queueClient.sendMessage(Buffer.from(JSON.stringify(queueItem)).toString('base64'));
+
+                context.log('Message sent to MainframeRequestQueue');
+            } else {
+                context.log('Rule not triggered');
+            }
+        });
+};
+
+export default azureFunction;

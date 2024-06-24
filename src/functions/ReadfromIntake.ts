@@ -1,5 +1,6 @@
 import { app, InvocationContext } from "@azure/functions";
 import { QueueServiceClient } from "@azure/storage-queue";
+import { Engine } from 'json-rules-engine';
 import axios from 'axios';
 
 export async function ReadfromIntake(queueItem: unknown, context: InvocationContext): Promise<void> {
@@ -18,6 +19,12 @@ export async function ReadfromIntake(queueItem: unknown, context: InvocationCont
             context.log('Current time is outside of the desired range. Skipping message processing.');
             return;
         }
+
+         // Serialize queueItem to a JSON string
+         const message = JSON.stringify(queueItem);
+
+         // Encode the message if necessary (e.g., Base64 encoding)
+         const encodedMessage = Buffer.from(message).toString('base64');
 
         context.log('Storage queue function processed work item:', queueItem);
         context.log('Message:', JSON.stringify(queueItem));
