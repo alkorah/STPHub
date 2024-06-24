@@ -1,4 +1,4 @@
-export class BuisnessLogicException extends Error {
+export class RuleEngineException extends Error {
   constructor(message: string) {
     super(message);
   }

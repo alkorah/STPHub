@@ -3,10 +3,9 @@ import {
   HttpResponseInit,
   InvocationContext,
 } from "@azure/functions";
-import { BuisnessLogicBuilder } from "./buisness/BuisnessLogicBuilder";
+import { RuleEngineEventManager } from "./ruleEngine/RuleEngineEventManager";
 import { RequestBuilder } from "./request/RequestHandler";
 import { ResponseBuilder } from "./response/ResponseHandler";
-import { BuisnessLogicException } from "./buisness/BuisnessLogicException";
 
 type AzureFunction = (
   request: HttpRequest,
@@ -29,27 +28,21 @@ type AzureFunction = (
  *
  * I think the create function/builder pattern is best suited for the way azure functions has configued it for us/
  */
-export function createAzureFunction<
-  Payload extends GenericPayload,
-  Result extends GenericPayload
->(
+export function createAzureFunction<Payload extends GenericPayload>(
   request: RequestBuilder<Payload>,
-  buisnessLogic: BuisnessLogicBuilder<Payload, Result>,
-  response: ResponseBuilder<Result>
+  ruleEngineManager: RuleEngineEventManager<any, any>,
+  response: ResponseBuilder
 ): AzureFunction {
   const intakeFN = request.build();
-  const buisnessLogicFN = buisnessLogic.build();
+  const ruleEngineFN = ruleEngineManager.build();
   const outakeFN = response.build();
 
   return async function (request, context) {
     try {
       const payload = intakeFN(request);
-      const result = buisnessLogicFN(payload);
-      return outakeFN(result);
+      await ruleEngineFN(payload);
+      return outakeFN();
     } catch (e) {
-      if (e instanceof BuisnessLogicException) {
-        //idk do something different
-      }
       //maybe we need an error handler builder as well ?
       //Or check the settings of the buidlers to determine how to handle
       return {};

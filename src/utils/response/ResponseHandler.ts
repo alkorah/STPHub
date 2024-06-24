@@ -1,14 +1,13 @@
-
 /**
  * This can be improved upon, not defined well rn.
  *
  */
-interface ResponseBuilderOptions<Result extends GenericPayload> {
-  handler: (result: Result) => FunctionResult;
+interface ResponseBuilderOptions {
+  handler: () => FunctionResult;
 }
 
-export class ResponseBuilder<ResultPayload extends GenericPayload> {
-  constructor(private options: ResponseBuilderOptions<ResultPayload>) {}
+export class ResponseBuilder {
+  constructor(private options: ResponseBuilderOptions) {}
 
   build() {
     return this.options.handler;

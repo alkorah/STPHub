@@ -14,7 +14,8 @@
     "@azure/functions": "^4.0.0",
     "@azure/storage-queue": "^12.16.0",
     "axios": "^1.7.2",
-    "hot-formula-parser": "^4.0.0"
+    "hot-formula-parser": "^4.0.0",
+    "json-rules-engine": "^6.5.0"
   },
   "devDependencies": {
     "@types/hot-formula-parser": "^4.0.4",
