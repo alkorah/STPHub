@@ -1,48 +1,59 @@
 import { InvocationContext } from "@azure/functions";
 import { Engine } from "json-rules-engine";
 
-type SubScriber<EventPayloads> = (
+type SubScriber<Data, EventPayloads> = (
+  payload: Data,
   data: EventPayloads,
   context: InvocationContext
 ) => Promise<void>;
 
 export class RuleEngineEventManager<
+  Data extends Record<string, string>,
   EventPayloads extends GenericPayload,
   EventNames extends string = string
 > {
-  subscribers: Map<EventNames, Array<SubScriber<EventPayloads>>> = new Map();
+  subscribers: Map<EventNames, Array<SubScriber<Data, EventPayloads>>> =
+    new Map();
 
   constructor(private ruleEngine: Engine) {}
 
   subscribe(
-    eventName: EventNames,
-    subscriber: (
-      result: EventPayloads,
-      context: InvocationContext
-    ) => Promise<void>
+    eventName: EventNames | Array<EventNames>,
+    subscriber: SubScriber<Data, EventPayloads>
   ) {
-    if (!this.subscribers.has(eventName)) {
-      this.subscribers.set(eventName, []);
+    const addEvent = (evName: EventNames) => {
+      if (!this.subscribers.has(evName)) {
+        this.subscribers.set(evName, []);
+      }
+      const prevSub = this.subscribers.get(evName) as Array<
+        SubScriber<Data, EventPayloads>
+      >;
+
+      prevSub.push(subscriber);
+
+      return this;
+    };
+
+    if (Array.isArray(eventName)) {
+      for (const name of eventName) {
+        addEvent(name);
+      }
+    } else {
+      addEvent(eventName);
     }
-    const prevSub = this.subscribers.get(eventName) as Array<
-      SubScriber<EventPayloads>
-    >;
-
-    prevSub.push(subscriber);
-
     return this;
   }
 
   build() {
-    return async (payload: EventPayloads, context: InvocationContext) => {
+    return async (payload: Data, context: InvocationContext) => {
       const { events } = await this.ruleEngine.run(payload);
 
       for (const event of events) {
         const subscribers = this.subscribers.get(event.type as EventNames);
         if (subscribers) {
-          await Promise.all(
+          return await Promise.all(
             subscribers.map((subscriber) =>
-              subscriber(event.params as EventPayloads, context)
+              subscriber(payload, event.params as EventPayloads, context)
             )
           );
         }
