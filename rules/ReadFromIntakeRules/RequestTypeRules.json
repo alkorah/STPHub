@@ -1,0 +1,23 @@
+{
+  "conditions": {
+    "all": [
+      {
+        "fact": "RequestType",
+        "operator": "equal",
+        "value": "AddressChange"
+      },
+      {
+        "fact": "State",
+        "operator": "equal",
+        "value": "Intake"
+      }
+    ]
+  },
+  "event": {
+    "type": "addToMongo",
+    "params": {
+      "staticValues": {},
+      "payloadKeys": ["RequestType", "State"]
+    }
+  }
+}

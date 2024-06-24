@@ -3,10 +3,11 @@ import { createAzureFunction } from "../utils/createAzureFunction";
 import { RequestBuilder } from "../utils/request/RequestHandler";
 import { Record } from "../database/models/Record";
 import { Engine } from "json-rules-engine";
-import { RuleEngineEventManager } from "../utils/ruleEngine/RuleEngineEventManager";
+import { RuleEngineEventManager } from "../utils/ruleEngine/createRulesEngine";
 import { ResponseBuilder } from "../utils/response/ResponseHandler";
 import { QueueServiceClient } from "@azure/storage-queue";
 import { z } from "zod";
+import { createRulesEngine } from "../utils/ruleEngine/getRules";
 
 enum State {
   Intake = "Intake",
@@ -17,35 +18,7 @@ enum RequestType {
   AddressChange = "AddressChange",
 }
 
-const rules = new Engine().addRule({
-  conditions: {
-    any: [
-      {
-        fact: "SendTo",
-        operator: "equal",
-        value: "Queue",
-      },
-    ],
-  },
-  event: {
-    type: "sendToQueueFromHTTP",
-    params: {},
-  },
-});
-
-const rulesManager = new RuleEngineEventManager(rules).subscribe(
-  "sendToQueueFromHTTP",
-  async (payload, eventData, context) => {
-    context.log("EXEC sendToQueueFromHTTP");
-    const queueClient = QueueServiceClient.fromConnectionString(
-      process.env["AzureWebJobsStorage"] as string
-    ).getQueueClient("ins-address-change-intake-queue");
-
-    await queueClient.sendMessage(
-      Buffer.from(JSON.stringify(payload)).toString("base64")
-    );
-  }
-);
+const getHTTPTestRuleEngine = createRulesEngine("/HttpTestRules", true);
 
 export const testHTTP = createAzureFunction(
   new RequestBuilder({
@@ -54,7 +27,7 @@ export const testHTTP = createAzureFunction(
       .set("state", z.nativeEnum(State))
       .set("type", z.nativeEnum(RequestType)),
   }),
-  rulesManager,
+  getHTTPTestRuleEngine,
   new ResponseBuilder({
     async handler() {
       return {

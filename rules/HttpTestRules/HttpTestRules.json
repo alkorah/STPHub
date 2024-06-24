@@ -1,0 +1,19 @@
+{
+  "conditions": {
+    "any": [
+      {
+        "fact": "SendTo",
+        "operator": "equal",
+        "value": "Queue"
+      }
+    ]
+  },
+  "event": {
+    "type": "sendToQueue",
+    "params": {
+      "queueName": "ins-address-change-intake-queue",
+      "payloadKeys": ["State", "RequestType"],
+      "staticValues": {}
+    }
+  }
+}
