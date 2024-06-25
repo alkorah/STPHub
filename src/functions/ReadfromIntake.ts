@@ -1,23 +1,18 @@
-import { HttpResponseInit, app } from "@azure/functions";
-import { createAzureFunction } from "../utils/createAzureFunction";
-import { RequestBuilder } from "../utils/request/RequestHandler";
-import { Record } from "../database/models/Record";
-import { Engine } from "json-rules-engine";
-import {
-  RuleEngineEventManager,
-  createGenericRulesHandler,
-} from "../utils/ruleEngine/createRulesEngine";
-import { createRulesEngine } from "../utils/ruleEngine/getRules";
+import { HttpResponseInit, InvocationContext, app } from "@azure/functions";
+import { readFromIntakePayloadSanitizer } from "../zod/santizers";
+import { createRuleEngineHandler } from "../RuleEngine/createRuleEngineHandler";
 
-// a function that returns a rules engine, to make the rules engine hot reloadable
-const getReadFromIntakeRulesEngine = createRulesEngine("/ReadFromIntakeRules", true);
+const ruleEngineHandler = createRuleEngineHandler("/readFromIntakeRules");
 
-export const ReadfromIntake = createAzureFunction<unknown>(
-  new RequestBuilder({
-    type: "queue",
-  }),
-  getReadFromIntakeRulesEngine
-);
+export async function ReadfromIntake(
+  payload: unknown,
+  context: InvocationContext
+) {
+  context.log("ReadfromIntake");
+  const intakePayload = readFromIntakePayloadSanitizer(payload);
+
+  await ruleEngineHandler(intakePayload, context);
+}
 
 app.storageQueue("ReadfromIntake", {
   queueName: "ins-address-change-intake-queue",

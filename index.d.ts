@@ -1,11 +1,18 @@
 import { HttpResponseInit } from "@azure/functions";
 
 declare global {
-  type PrimitiveData = number | string;
+  type IntakePayload = {};
 
-  type JSONData = Record<string, PrimitiveData>;
+  enum State {
+    Intake = "Intake",
+    Processing = "Processing",
+  }
 
-  type ParsedData = JSONData | PrimitiveData;
+  enum RequestType {
+    AddressChange = "AddressChange",
+  }
 
-  type GenericPayload = Record<string, ParsedData>;
+  type TestHttpPayload = {};
+
+  type AllPayloads = IntakePayload | TestHttpPayload;
 }

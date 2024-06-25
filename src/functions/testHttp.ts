@@ -1,42 +1,24 @@
-import { HttpResponseInit, app } from "@azure/functions";
-import { createAzureFunction } from "../utils/createAzureFunction";
-import { RequestBuilder } from "../utils/request/RequestHandler";
-import { Record } from "../database/models/Record";
-import { Engine } from "json-rules-engine";
-import { RuleEngineEventManager } from "../utils/ruleEngine/createRulesEngine";
-import { ResponseBuilder } from "../utils/response/ResponseHandler";
-import { QueueServiceClient } from "@azure/storage-queue";
-import { z } from "zod";
-import { createRulesEngine } from "../utils/ruleEngine/getRules";
+import {
+  HttpRequest,
+  HttpResponse,
+  HttpResponseInit,
+  InvocationContext,
+  app,
+} from "@azure/functions";
+import { createRuleEngineHandler } from "../RuleEngine/createRuleEngineHandler";
+import { testHttpPayloadSanitizer } from "../zod/santizers";
 
-enum State {
-  Intake = "Intake",
-  Processing = "Processing",
+const httpRuleEngineHandler =
+  createRuleEngineHandler<Promise<HttpResponse>>("/HttpTestRules");
+
+export async function testHTTP(
+  request: HttpRequest,
+  context: InvocationContext
+): Promise<HttpResponse> {
+  const data = testHttpPayloadSanitizer(await request.json());
+
+  return httpRuleEngineHandler(data, context);
 }
-
-enum RequestType {
-  AddressChange = "AddressChange",
-}
-
-const getHTTPTestRuleEngine = createRulesEngine("/HttpTestRules", true);
-
-export const testHTTP = createAzureFunction(
-  new RequestBuilder({
-    type: "post",
-    zodSantizer: new Map()
-      .set("state", z.nativeEnum(State))
-      .set("type", z.nativeEnum(RequestType)),
-  }),
-  getHTTPTestRuleEngine,
-  new ResponseBuilder({
-    async handler() {
-      return {
-        status: 200,
-        body: "Done!",
-      };
-    },
-  })
-);
 
 app.http("testADD", {
   methods: ["POST"],
